@@ -1,0 +1,6 @@
+[model]
+name = Dogs vs Cats
+model_file = ./models/dogs-vs-cats
+data = ../fastai-course/deeplearning1/nbs/data/dogscats/sample100/
+train_batch = 8
+
