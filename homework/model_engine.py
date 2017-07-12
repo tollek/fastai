@@ -219,6 +219,49 @@ class ModelRunner(cmd.Cmd):
         self.config = None
         self.init_config()
 
+    def do_kaggle(self, line):
+        #path = 'data/dogs-vs-cats-kernels-edition/test10/'
+        path = 'data/dogs-vs-cats-kernels-edition/test/'
+        batch_size = 8
+
+        # count files in unknown/*.jpg
+        total_files = len(glob(path + 'unknown/*.jpg'))
+
+        #x = self.get_model().get_batches(path+'unknown', shuffle=False, batch_size=batch_size)
+        model = self.get_model()
+        batch = model.get_batches(path, shuffle=False, batch_size=batch_size)
+        filenames = batch.filenames[:]
+        predictions = []
+
+        while True:
+            try:
+                imgs, unused_labels = next(batch)
+            except StopIteration:
+                break
+            frag_predictions = model.predict(imgs, True)
+            for i in xrange(len(imgs)):
+                fname = filenames[0]
+                filenames = filenames[1:]
+                confidence = frag_predictions[0][i]
+                pred_class = frag_predictions[1][i]
+                pred_class_name = frag_predictions[2][i]
+                predictions.append([fname, confidence, pred_class, pred_class_name])
+            # batch is an infinite iterator; we need to track number of already
+            # processed images by ourselves.
+            print(len(predictions))
+            if len(predictions) == total_files:
+                break
+
+        # for p in predictions:
+        #     print(p)
+        pred_csv = open('predictions.csv', 'w')
+        pred_csv.write('id,label\n')
+        for p in predictions:
+            label = p[0].split('/')[1].split('.')[0]
+            id = p[2]
+            pred_csv.write('{0},{1}\n'.format(label, id))
+        pred_csv.close()
+
     def do_exit(self, line):
         return True
 
